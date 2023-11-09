@@ -16,6 +16,7 @@ type IUserController interface {
 	SignupController(c *gin.Context)
 	GetAllUsersController(c *gin.Context)
 	GetUserByEmailController(c *gin.Context)
+	DeleteUserByIdController(c *gin.Context)
 }
 
 type UserController struct {
@@ -127,6 +128,32 @@ func (uc *UserController) GetUserByEmailController(c *gin.Context) {
 		return
 	}
 
-	response := utils.CreateSuccessResponse(http.StatusOK, constants.GetUserByEmailSuccessful, user)
+	response := utils.CreateSuccessResponse(http.StatusOK, constants.GetUserByEmailSuccessful, utils.CreateUserResponse(user))
+	c.JSON(http.StatusOK, response)
+}
+
+func (uc *UserController) DeleteUserByIdController(c *gin.Context) {
+
+	id := c.Param(constants.Id)
+
+	if id == "" {
+		errMessage := constants.ErrInvalidId
+		fmt.Println("[DeleteUserByIdController]", errMessage)
+		errRes := utils.CreateErrorResponse(http.StatusBadRequest, errMessage)
+		c.JSON(http.StatusBadRequest, errRes)
+		return
+	}
+
+	err := uc.us.DeleteUserById(id)
+
+	if err != nil {
+		fmt.Println("[DeleteUserByIdController]", err.Error())
+		errRes := utils.CreateErrorResponse(http.StatusInternalServerError, err.Error())
+		c.JSON(http.StatusInternalServerError, errRes)
+		return
+	}
+
+	response := utils.CreateSuccessResponse(http.StatusOK, constants.DeleteUserByIdSuccessful, nil)
+
 	c.JSON(http.StatusOK, response)
 }

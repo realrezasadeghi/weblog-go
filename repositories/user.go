@@ -8,10 +8,10 @@ import (
 
 type IUserRepository interface {
 	GetAllUsers() ([]models.User, error)
-	DeleteUserByEmail(email string) error
+	DeleteUserById(id string) error
 	GetUserByEmail(email string) (models.User, error)
 	CreateUser(user *models.User) (models.User, error)
-	UpdateUserByEmail(email string, user models.User) (models.User, error)
+	UpdateUserById(email string, user models.User) (models.User, error)
 }
 
 type UserRepository struct {
@@ -38,17 +38,17 @@ func (ur *UserRepository) GetAllUsers() ([]models.User, error) {
 	return users, nil
 }
 
-func (ur *UserRepository) DeleteUserByEmail(email string) error {
-	fmt.Println("[DeleteUserByEmail] delete user by email")
+func (ur *UserRepository) DeleteUserById(id string) error {
+	fmt.Println("[DeleteUserById] delete user by id in user repository")
 
-	response := ur.db.Where("email = ?", email).Delete(&models.User{})
+	response := ur.db.Where("id = ?", id).Delete(&models.User{})
 
 	if response.Error != nil {
-		fmt.Println("[DeleteUserByEmail]", response.Error.Error())
+		fmt.Println("[DeleteUserById]", response.Error.Error())
 		return response.Error
 	}
 
-	fmt.Println("[DeleteUserByEmail] delete user with email", email)
+	fmt.Println("[DeleteUserById] delete user with id in user repository", id)
 
 	return nil
 }
@@ -87,17 +87,17 @@ func (ur *UserRepository) CreateUser(user *models.User) (models.User, error) {
 	return *user, nil
 }
 
-func (ur *UserRepository) UpdateUserByEmail(email string, user models.User) (models.User, error) {
-	fmt.Println("[UpdateUserByEmail] Hitting update user by email in user repository")
+func (ur *UserRepository) UpdateUserById(id string, user models.User) (models.User, error) {
+	fmt.Println("[UpdateUserById] Hitting update user by id in user repository")
 
-	response := ur.db.Model(&user).Updates(user)
+	response := ur.db.Where("id = ?", id).Model(&user).Updates(user)
 
 	if response.Error != nil {
-		fmt.Println("[UpdateUserByEmail]", response.Error.Error())
+		fmt.Println("[UpdateUserById]", response.Error.Error())
 		return models.User{}, response.Error
 	}
 
-	fmt.Println("[UpdateUserByEmail] Updating user successful")
+	fmt.Println("[UpdateUserById] Updating user successful")
 
 	return user, nil
 }

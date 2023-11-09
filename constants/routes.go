@@ -6,7 +6,7 @@ const (
 	SignupPath            = "/signup"
 	LogoutPath            = "/logout"
 	GetAllUsersPath       = "/getAllUsers"
+	UpdateUserByEmailPath = "/updateUserById"
+	DeleteUserByEmailPath = "/deleteUserById/:id"
 	GetUserByEmailPath    = "/getUserByEmail/:email"
-	UpdateUserByEmailPath = "/updateUserByEmail/:email"
-	DeleteUserByEmailPath = "/deleteUserByEmail/:email"
 )

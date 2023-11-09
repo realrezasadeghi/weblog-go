@@ -12,6 +12,7 @@ import (
 )
 
 type IUserService interface {
+	DeleteUserById(id string) error
 	GetAllUsers() ([]models.User, error)
 	GetUserByEmail(email string) (models.User, error)
 	Login(request *requests.Login) (*models.User, error)
@@ -41,6 +42,21 @@ func (us *UserService) GetAllUsers() ([]models.User, error) {
 	fmt.Println("[GetAllUsersController] list of users has found in user service")
 
 	return users, nil
+}
+
+func (us *UserService) DeleteUserById(id string) error {
+	fmt.Println("[DeleteUserById] Hitting delete user by id in user service")
+
+	err := us.ur.DeleteUserById(id)
+
+	if err != nil {
+		fmt.Println("[DeleteUserById]", err.Error())
+		return err
+	}
+
+	fmt.Println("[DeleteUserById] user deleted from table in user service")
+
+	return nil
 }
 
 func (us *UserService) GetUserByEmail(email string) (models.User, error) {
