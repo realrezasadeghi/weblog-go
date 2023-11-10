@@ -74,7 +74,3 @@ func ValidateToken(signedToken string) (*models.Token, error) {
 
 	return claims, nil
 }
-
-func IsEqualToken(tokenOne, tokenTwo string) bool {
-	return tokenOne == tokenTwo
-}
