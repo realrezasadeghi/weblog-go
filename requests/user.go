@@ -11,3 +11,8 @@ type Signup struct {
 	LastName  string `json:"last_name"`
 	FirstName string `json:"first_name"`
 }
+
+type Update struct {
+	LastName  string `json:"last_name"`
+	FirstName string `json:"first_name"`
+}

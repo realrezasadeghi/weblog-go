@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gorm.io/gorm"
 	"weblog/models"
+	"weblog/requests"
 )
 
 type IUserRepository interface {
@@ -11,7 +12,7 @@ type IUserRepository interface {
 	DeleteUserById(id string) error
 	GetUserByEmail(email string) (models.User, error)
 	CreateUser(user *models.User) (models.User, error)
-	UpdateUserById(email string, user models.User) (models.User, error)
+	UpdateUserByEmail(email string, user *requests.Update) (models.User, error)
 }
 
 type UserRepository struct {
@@ -87,17 +88,20 @@ func (ur *UserRepository) CreateUser(user *models.User) (models.User, error) {
 	return *user, nil
 }
 
-func (ur *UserRepository) UpdateUserById(id string, user models.User) (models.User, error) {
-	fmt.Println("[UpdateUserById] Hitting update user by id in user repository")
+func (ur *UserRepository) UpdateUserByEmail(email string, user *requests.Update) (models.User, error) {
+	fmt.Println("[UpdateUserByEmail] Hitting update user by email in user repository")
 
-	response := ur.db.Where("id = ?", id).Model(&user).Updates(user)
+	var userResponse models.User
+	response := ur.db.Where("email = ?", email).Model(&models.User{}).Updates(&user)
 
 	if response.Error != nil {
-		fmt.Println("[UpdateUserById]", response.Error.Error())
-		return models.User{}, response.Error
+		fmt.Println("[UpdateUserByEmail]", response.Error.Error())
+		return userResponse, response.Error
 	}
 
-	fmt.Println("[UpdateUserById] Updating user successful")
+	fmt.Println("[UpdateUserByEmail] Updating user successful")
 
-	return user, nil
+	response.Where("email = ?", email).Find(&userResponse)
+
+	return userResponse, nil
 }

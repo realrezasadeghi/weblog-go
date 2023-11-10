@@ -14,6 +14,7 @@ const (
 	ErrMaliciousToken         = "malicious token has been passed"
 	GetAllUsersSuccessful     = "User list received successfully"
 	ErrUserNotFound           = "user is not found with username"
+	UpdateSuccessful          = "You update information successful"
 	ErrNoAuthHeader           = "no authorization header provided"
 	ErrUserIsNotAuthorized    = "user is not authorized to this api"
 	ErrUserAlreadyExists      = "user is already exists with email"

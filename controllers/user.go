@@ -13,6 +13,7 @@ import (
 
 type IUserController interface {
 	LoginController(c *gin.Context)
+	UpdateController(c *gin.Context)
 	SignupController(c *gin.Context)
 	GetAllUsersController(c *gin.Context)
 	GetUserByEmailController(c *gin.Context)
@@ -154,6 +155,41 @@ func (uc *UserController) DeleteUserByIdController(c *gin.Context) {
 	}
 
 	response := utils.CreateSuccessResponse(http.StatusOK, constants.DeleteUserByIdSuccessful, nil)
+
+	c.JSON(http.StatusOK, response)
+}
+
+func (uc *UserController) UpdateController(c *gin.Context) {
+
+	email, isExistEmail := c.Get(constants.Email)
+	if !isExistEmail {
+		errMessage := constants.ErrInvalidToken
+		fmt.Println("[UpdateController]", errMessage)
+		errResponse := utils.CreateErrorResponse(http.StatusInternalServerError, errMessage)
+		c.JSON(http.StatusInternalServerError, errResponse)
+		return
+	}
+
+	var request *requests.Update
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		fmt.Println("[UpdateController]", err.Error())
+		errorResponse := utils.CreateErrorResponse(http.StatusBadRequest, err.Error())
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return
+	}
+
+	emailString := fmt.Sprintf("%v", email)
+	user, err := uc.us.Update(emailString, request)
+
+	if err != nil {
+		fmt.Println("[UpdateController]", err.Error())
+		errorResponse := utils.CreateErrorResponse(http.StatusBadRequest, err.Error())
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return
+	}
+
+	response := utils.CreateSuccessResponse(http.StatusOK, constants.UpdateSuccessful, utils.CreateUserResponse(user))
 
 	c.JSON(http.StatusOK, response)
 }

@@ -17,6 +17,7 @@ type IUserService interface {
 	GetUserByEmail(email string) (models.User, error)
 	Login(request *requests.Login) (*models.User, error)
 	Signup(request *requests.Signup) (*models.User, error)
+	Update(email string, request *requests.Update) (models.User, error)
 }
 
 type UserService struct {
@@ -137,4 +138,19 @@ func (us *UserService) Signup(request *requests.Signup) (*models.User, error) {
 	fmt.Println("[SignupService] Returned saved user details from repository")
 
 	return &createdUser, nil
+}
+
+func (us *UserService) Update(email string, request *requests.Update) (models.User, error) {
+	fmt.Println("[UpdateService] update user details in user service")
+
+	user, err := us.ur.UpdateUserByEmail(email, request)
+
+	if err != nil {
+		fmt.Println("[UpdateService]", err.Error())
+		return models.User{}, err
+	}
+
+	fmt.Println("[UpdateService], update user details in user service")
+
+	return user, nil
 }
