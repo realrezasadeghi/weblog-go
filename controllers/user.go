@@ -21,11 +21,11 @@ func handleErrorResponse(c *gin.Context, statusCode int, err error) {
 
 type IUserController interface {
 	LoginController(c *gin.Context)
-	UpdateController(c *gin.Context)
 	SignupController(c *gin.Context)
+	GetUserController(c *gin.Context)
+	UpdateUserController(c *gin.Context)
+	DeleteUserController(c *gin.Context)
 	GetAllUsersController(c *gin.Context)
-	GetUserByEmailController(c *gin.Context)
-	DeleteUserByIdController(c *gin.Context)
 }
 
 type UserController struct {
@@ -51,7 +51,7 @@ func (uc *UserController) LoginController(c *gin.Context) {
 		handleErrorResponse(c, http.StatusInternalServerError, err)
 	}
 
-	token, errGenerateToken := utils.GenerateToken(user.Email, user.Role)
+	token, errGenerateToken := utils.GenerateToken(user.Email, user.Role, user.ID)
 
 	if errGenerateToken != nil {
 		handleErrorResponse(c, http.StatusInternalServerError, err)
@@ -83,6 +83,68 @@ func (uc *UserController) SignupController(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+func (uc *UserController) GetUserController(c *gin.Context) {
+	userId, isExistId := c.Get(constants.Id)
+
+	if !isExistId {
+		errMessage := constants.ErrInvalidId
+		handleErrorResponse(c, http.StatusBadRequest, errors.New(errMessage))
+	}
+
+	user, err := uc.us.GetUserById(utils.ToString(userId))
+
+	if err != nil {
+		handleErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	response := utils.CreateSuccessResponse(http.StatusOK, constants.GetUserByEmailSuccessful, utils.CreateUserResponse(user))
+	c.JSON(http.StatusOK, response)
+}
+
+func (uc *UserController) DeleteUserController(c *gin.Context) {
+	userId, isExistId := c.Get(constants.Id)
+
+	if !isExistId {
+		errMessage := constants.ErrInvalidId
+		handleErrorResponse(c, http.StatusBadRequest, errors.New(errMessage))
+	}
+
+	err := uc.us.DeleteUserById(utils.ToString(userId))
+
+	if err != nil {
+		handleErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	response := utils.CreateSuccessResponse(http.StatusOK, constants.DeleteUserByIdSuccessful, nil)
+
+	c.JSON(http.StatusOK, response)
+}
+
+func (uc *UserController) UpdateUserController(c *gin.Context) {
+	id, isExistEmail := c.Get(constants.Id)
+
+	if !isExistEmail {
+		errMessage := constants.ErrInvalidToken
+		handleErrorResponse(c, http.StatusInternalServerError, errors.New(errMessage))
+	}
+
+	var request *requests.Update
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		handleErrorResponse(c, http.StatusBadRequest, err)
+	}
+
+	user, err := uc.us.UpdateUserById(utils.ToString(id), request)
+
+	if err != nil {
+		handleErrorResponse(c, http.StatusInternalServerError, err)
+	}
+
+	response := utils.CreateSuccessResponse(http.StatusOK, constants.UpdateSuccessful, utils.CreateUserResponse(user))
+
+	c.JSON(http.StatusOK, response)
+}
+
 func (uc *UserController) GetAllUsersController(c *gin.Context) {
 	allUsers, err := uc.us.GetAllUsers()
 
@@ -96,69 +158,5 @@ func (uc *UserController) GetAllUsersController(c *gin.Context) {
 	}
 
 	response := utils.CreateSuccessResponse(http.StatusOK, constants.GetAllUsersSuccessful, users)
-	c.JSON(http.StatusOK, response)
-}
-
-func (uc *UserController) GetUserByEmailController(c *gin.Context) {
-	email := c.Param(constants.Email)
-
-	if email == "" {
-		errMessage := constants.ErrInvalidEmail
-		handleErrorResponse(c, http.StatusBadRequest, errors.New(errMessage))
-	}
-
-	user, err := uc.us.GetUserByEmail(email)
-
-	if err != nil {
-		handleErrorResponse(c, http.StatusInternalServerError, err)
-	}
-
-	response := utils.CreateSuccessResponse(http.StatusOK, constants.GetUserByEmailSuccessful, utils.CreateUserResponse(user))
-	c.JSON(http.StatusOK, response)
-}
-
-func (uc *UserController) DeleteUserByIdController(c *gin.Context) {
-
-	id := c.Param(constants.Id)
-
-	if id == "" {
-		errMessage := constants.ErrInvalidId
-		handleErrorResponse(c, http.StatusBadRequest, errors.New(errMessage))
-	}
-
-	err := uc.us.DeleteUserById(id)
-
-	if err != nil {
-		handleErrorResponse(c, http.StatusInternalServerError, err)
-	}
-
-	response := utils.CreateSuccessResponse(http.StatusOK, constants.DeleteUserByIdSuccessful, nil)
-
-	c.JSON(http.StatusOK, response)
-}
-
-func (uc *UserController) UpdateController(c *gin.Context) {
-
-	email, isExistEmail := c.Get(constants.Email)
-	if !isExistEmail {
-		errMessage := constants.ErrInvalidToken
-		handleErrorResponse(c, http.StatusInternalServerError, errors.New(errMessage))
-	}
-
-	var request *requests.Update
-
-	if err := c.ShouldBindJSON(&request); err != nil {
-		handleErrorResponse(c, http.StatusBadRequest, err)
-	}
-
-	emailString := fmt.Sprintf("%v", email)
-	user, err := uc.us.Update(emailString, request)
-
-	if err != nil {
-		handleErrorResponse(c, http.StatusInternalServerError, err)
-	}
-
-	response := utils.CreateSuccessResponse(http.StatusOK, constants.UpdateSuccessful, utils.CreateUserResponse(user))
-
 	c.JSON(http.StatusOK, response)
 }

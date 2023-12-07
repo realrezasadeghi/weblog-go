@@ -14,10 +14,10 @@ import (
 type IUserService interface {
 	DeleteUserById(id string) error
 	GetAllUsers() ([]models.User, error)
-	GetUserByEmail(email string) (models.User, error)
+	GetUserById(id string) (models.User, error)
 	Login(request *requests.Login) (*models.User, error)
 	Signup(request *requests.Signup) (*models.User, error)
-	Update(email string, request *requests.Update) (models.User, error)
+	UpdateUserById(id string, request *requests.Update) (models.User, error)
 }
 
 type UserService struct {
@@ -60,21 +60,18 @@ func (us *UserService) DeleteUserById(id string) error {
 	return nil
 }
 
-func (us *UserService) GetUserByEmail(email string) (models.User, error) {
-	fmt.Println("[GetUserByEmailPath] get details user by email in user service")
+func (us *UserService) GetUserById(id string) (models.User, error) {
+	fmt.Println("[GetUserById] Hitting get user by id in user service")
 
-	user, err := us.ur.GetUserByEmail(email)
+	fmt.Println("id", id)
+	user, err := us.ur.GetUserById(id)
 
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		errMessage := constants.ErrUserNotFound
-		fmt.Println("[GetUserByEmailPath]", errMessage)
-		return models.User{}, errors.New(errMessage)
-	} else if err != nil {
-		fmt.Println("[GetUserByEmailPath]", err.Error())
+	if err != nil {
+		fmt.Println("[GetUserById]", err.Error())
 		return models.User{}, err
 	}
 
-	fmt.Println("[GetUserByEmailPath] Returned user details from repository")
+	fmt.Println("[GetUserById] get user byd id in user service successful")
 
 	return user, nil
 }
@@ -140,10 +137,10 @@ func (us *UserService) Signup(request *requests.Signup) (*models.User, error) {
 	return &createdUser, nil
 }
 
-func (us *UserService) Update(email string, request *requests.Update) (models.User, error) {
+func (us *UserService) UpdateUserById(id string, request *requests.Update) (models.User, error) {
 	fmt.Println("[UpdateService] update user details in user service")
 
-	user, err := us.ur.UpdateUserByEmail(email, request)
+	user, err := us.ur.UpdateUserById(id, request)
 
 	if err != nil {
 		fmt.Println("[UpdateService]", err.Error())

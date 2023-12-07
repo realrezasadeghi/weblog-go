@@ -9,13 +9,14 @@ import (
 	"weblog/models"
 )
 
-func GenerateToken(email, role string) (string, error) {
+func GenerateToken(email, role string, id uint) (string, error) {
 	fmt.Println("[GenerateToken] Generating access token")
 
 	nowTime := time.Now()
 	expiresTime := nowTime.Add(time.Minute * time.Duration(constants.JwtAccessTokenTimeDuration))
 
 	tokenClaims := models.Token{
+		Id:    id,
 		Role:  role,
 		Email: email,
 		RegisteredClaims: jwt.RegisteredClaims{

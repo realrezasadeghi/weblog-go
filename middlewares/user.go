@@ -35,7 +35,8 @@ func Authentication(c *gin.Context) {
 	}
 
 	fmt.Println("[AuthenticationMiddleware] User is authenticated")
-	c.Set(constants.Email, claims.Email)
+	c.Set(constants.Id, claims.Id)
 	c.Set(constants.Role, claims.Role)
+	c.Set(constants.Email, claims.Email)
 	c.Next()
 }

@@ -8,11 +8,12 @@ import (
 )
 
 type IUserRepository interface {
-	GetAllUsers() ([]models.User, error)
 	DeleteUserById(id string) error
+	GetAllUsers() ([]models.User, error)
+	GetUserById(id string) (models.User, error)
 	GetUserByEmail(email string) (models.User, error)
 	CreateUser(user *models.User) (models.User, error)
-	UpdateUserByEmail(email string, user *requests.Update) (models.User, error)
+	UpdateUserById(id string, user *requests.Update) (models.User, error)
 }
 
 type UserRepository struct {
@@ -23,6 +24,21 @@ func CreateUserRepository(db *gorm.DB) IUserRepository {
 	return &UserRepository{
 		db: db,
 	}
+}
+
+func (ur *UserRepository) DeleteUserById(id string) error {
+	fmt.Println("[DeleteUserById] delete user by id in user repository")
+
+	response := ur.db.Where("id = ?", id).Delete(&models.User{})
+
+	if response.Error != nil {
+		fmt.Println("[DeleteUserById]", response.Error.Error())
+		return response.Error
+	}
+
+	fmt.Println("[DeleteUserById] delete user with id in user repository", id)
+
+	return nil
 }
 
 func (ur *UserRepository) GetAllUsers() ([]models.User, error) {
@@ -39,19 +55,22 @@ func (ur *UserRepository) GetAllUsers() ([]models.User, error) {
 	return users, nil
 }
 
-func (ur *UserRepository) DeleteUserById(id string) error {
-	fmt.Println("[DeleteUserById] delete user by id in user repository")
+func (ur *UserRepository) GetUserById(id string) (models.User, error) {
+	fmt.Println("[GetUserById] Hitting get user by id in user repository")
 
-	response := ur.db.Where("id = ?", id).Delete(&models.User{})
+	var user models.User
+
+	response := ur.db.Where("id = ?", id).Find(&user)
 
 	if response.Error != nil {
-		fmt.Println("[DeleteUserById]", response.Error.Error())
-		return response.Error
+		fmt.Println("[GetUserById]", response.Error.Error())
+		return models.User{}, response.Error
+	} else if response.RowsAffected == 0 {
+		fmt.Println("[GetUserById] User is not found with id")
+		return models.User{}, gorm.ErrRecordNotFound
 	}
 
-	fmt.Println("[DeleteUserById] delete user with id in user repository", id)
-
-	return nil
+	return user, nil
 }
 
 func (ur *UserRepository) GetUserByEmail(email string) (models.User, error) {
@@ -88,20 +107,20 @@ func (ur *UserRepository) CreateUser(user *models.User) (models.User, error) {
 	return *user, nil
 }
 
-func (ur *UserRepository) UpdateUserByEmail(email string, user *requests.Update) (models.User, error) {
-	fmt.Println("[UpdateUserByEmail] Hitting update user by email in user repository")
+func (ur *UserRepository) UpdateUserById(id string, user *requests.Update) (models.User, error) {
+	fmt.Println("[UpdateUserById] Hitting update user by email in user repository")
 
 	var userResponse models.User
-	response := ur.db.Where("email = ?", email).Model(&models.User{}).Updates(&user)
+	response := ur.db.Where("id = ?", id).Model(&models.User{}).Updates(&user)
 
 	if response.Error != nil {
-		fmt.Println("[UpdateUserByEmail]", response.Error.Error())
+		fmt.Println("[UpdateUserById]", response.Error.Error())
 		return userResponse, response.Error
 	}
 
-	fmt.Println("[UpdateUserByEmail] Updating user successful")
+	fmt.Println("[UpdateUserById] Updating user successful")
 
-	response.Where("email = ?", email).Find(&userResponse)
+	response.Where("email = ?", id).Find(&userResponse)
 
 	return userResponse, nil
 }
