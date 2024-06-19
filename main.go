@@ -13,7 +13,7 @@ import (
 
 func main() {
 	app := gin.Default()
-	config, _ := configs.LoadConfigs()
+	config, _ := configs.LoadDatabaseConfig()
 	db := database.InitDatabase(config)
 
 	userRepository := repositories.CreateUserRepository(db)

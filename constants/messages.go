@@ -18,5 +18,6 @@ const (
 	ErrNoAuthHeader           = "no authorization header provided"
 	ErrUserIsNotAuthorized    = "user is not authorized to this api"
 	ErrUserAlreadyExists      = "user is already exists with email"
+	ForgetPasswordSuccessful  = "link send to your email successful"
 	ErrInvalidTokenExpiration = "invalid jwt access token expiration in minutes value"
 )

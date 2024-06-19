@@ -3,13 +3,14 @@ package controllers
 import (
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"weblog/constants"
 	"weblog/requests"
 	"weblog/responses"
 	"weblog/services"
 	"weblog/utils"
+
+	"github.com/gin-gonic/gin"
 )
 
 func handleErrorResponse(c *gin.Context, statusCode int, err error) {
@@ -26,6 +27,7 @@ type IUserController interface {
 	UpdateUserController(c *gin.Context)
 	DeleteUserController(c *gin.Context)
 	GetAllUsersController(c *gin.Context)
+	ForgetPasswordController(c *gin.Context)
 }
 
 type UserController struct {
@@ -45,7 +47,7 @@ func (uc *UserController) LoginController(c *gin.Context) {
 		handleErrorResponse(c, http.StatusBadRequest, err)
 	}
 
-	user, err := uc.us.Login(request)
+	user, err := uc.us.LoginUser(request)
 
 	if err != nil {
 		handleErrorResponse(c, http.StatusInternalServerError, err)
@@ -70,7 +72,7 @@ func (uc *UserController) SignupController(c *gin.Context) {
 		handleErrorResponse(c, http.StatusBadRequest, err)
 	}
 
-	createdUser, err := uc.us.Signup(request)
+	createdUser, err := uc.us.SignupUser(request)
 
 	if err != nil {
 		handleErrorResponse(c, http.StatusInternalServerError, err)
@@ -158,5 +160,25 @@ func (uc *UserController) GetAllUsersController(c *gin.Context) {
 	}
 
 	response := utils.CreateSuccessResponse(http.StatusOK, constants.GetAllUsersSuccessful, users)
+	c.JSON(http.StatusOK, response)
+}
+
+func (uc *UserController) ForgetPasswordController(c *gin.Context) {
+	var request *requests.ForgetPassword
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		handleErrorResponse(c, http.StatusBadRequest, err)
+		return
+	}
+
+	errForgetPassword := uc.us.ForgetPasswordUser(request)
+
+	if errForgetPassword != nil {
+		handleErrorResponse(c, http.StatusInternalServerError, errForgetPassword)
+		return
+	}
+
+	response := utils.CreateSuccessResponse(http.StatusOK, constants.ForgetPasswordSuccessful, nil)
+
 	c.JSON(http.StatusOK, response)
 }

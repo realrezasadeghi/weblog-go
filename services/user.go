@@ -3,7 +3,9 @@ package services
 import (
 	"errors"
 	"fmt"
+	"github.com/thanhpk/randstr"
 	"gorm.io/gorm"
+	"time"
 	"weblog/constants"
 	"weblog/models"
 	"weblog/repositories"
@@ -15,8 +17,9 @@ type IUserService interface {
 	DeleteUserById(id string) error
 	GetAllUsers() ([]models.User, error)
 	GetUserById(id string) (models.User, error)
-	Login(request *requests.Login) (*models.User, error)
-	Signup(request *requests.Signup) (*models.User, error)
+	LoginUser(request *requests.Login) (*models.User, error)
+	SignupUser(request *requests.Signup) (*models.User, error)
+	ForgetPasswordUser(request *requests.ForgetPassword) error
 	UpdateUserById(id string, request *requests.Update) (models.User, error)
 }
 
@@ -76,7 +79,7 @@ func (us *UserService) GetUserById(id string) (models.User, error) {
 	return user, nil
 }
 
-func (us *UserService) Login(request *requests.Login) (*models.User, error) {
+func (us *UserService) LoginUser(request *requests.Login) (*models.User, error) {
 	fmt.Println("[LoginService] Hitting login function in user service")
 
 	user, err := us.ur.GetUserByEmail(request.Email)
@@ -96,10 +99,10 @@ func (us *UserService) Login(request *requests.Login) (*models.User, error) {
 	}
 
 	fmt.Println("[LoginService] User login successful")
-	return &user, nil
+	return user, nil
 }
 
-func (us *UserService) Signup(request *requests.Signup) (*models.User, error) {
+func (us *UserService) SignupUser(request *requests.Signup) (*models.User, error) {
 	fmt.Println("[SignupService] Hitting signup function in user service")
 
 	_, err := us.ur.GetUserByEmail(request.Email)
@@ -150,4 +153,42 @@ func (us *UserService) UpdateUserById(id string, request *requests.Update) (mode
 	fmt.Println("[UpdateService], update user details in user service")
 
 	return user, nil
+}
+
+func (us *UserService) ForgetPasswordUser(request *requests.ForgetPassword) error {
+	fmt.Println("[ForgetPasswordUser] forget password user in user service")
+
+	user, err := us.ur.GetUserByEmail(request.Email)
+
+	if err != nil {
+		fmt.Println("[ForgetPasswordUser] error in user service", err.Error())
+		return err
+	}
+
+	resetToken := randstr.String(20)
+	password := &models.UpdatePassword{
+		PasswordResetToken: utils.Encode(resetToken),
+		PasswordResetAt:    time.Now().Add(time.Minute * 15),
+	}
+
+	errUpdateResetPassword := us.ur.UpdateUserResetPassword(request.Email, password)
+
+	if errUpdateResetPassword != nil {
+		return errUpdateResetPassword
+	}
+
+	emailData := &models.EmailData{
+		FirstName: user.FirstName,
+		Subject:   "Your password reset token valid for 10M",
+		URL:       constants.ResetPasswordPath + "/" + resetToken,
+	}
+
+	errSendEmail := utils.SendEmail(user, emailData, "resetPassword.html")
+
+	if errSendEmail != nil {
+		fmt.Println("[ForgetPassword] error in forget password user service")
+		return errSendEmail
+	}
+
+	return nil
 }

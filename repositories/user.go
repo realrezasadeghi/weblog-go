@@ -11,9 +11,10 @@ type IUserRepository interface {
 	DeleteUserById(id string) error
 	GetAllUsers() ([]models.User, error)
 	GetUserById(id string) (models.User, error)
-	GetUserByEmail(email string) (models.User, error)
+	GetUserByEmail(email string) (*models.User, error)
 	CreateUser(user *models.User) (models.User, error)
 	UpdateUserById(id string, user *requests.Update) (models.User, error)
+	UpdateUserResetPassword(email string, password *models.UpdatePassword) error
 }
 
 type UserRepository struct {
@@ -73,18 +74,19 @@ func (ur *UserRepository) GetUserById(id string) (models.User, error) {
 	return user, nil
 }
 
-func (ur *UserRepository) GetUserByEmail(email string) (models.User, error) {
+func (ur *UserRepository) GetUserByEmail(email string) (*models.User, error) {
 	fmt.Println("[GetUserByEmail] find user details by username in user repository")
-	var user models.User
+
+	var user *models.User
 
 	response := ur.db.Where("email = ?", email).First(&user)
 
 	if response.Error != nil {
 		fmt.Println("[GetUserByEmail]", response.Error.Error())
-		return models.User{}, response.Error
+		return &models.User{}, response.Error
 	} else if response.RowsAffected == 0 {
 		fmt.Println("[FindUserByUsernameRepository] User is not found with username")
-		return models.User{}, gorm.ErrRecordNotFound
+		return &models.User{}, gorm.ErrRecordNotFound
 	}
 
 	fmt.Println("[GetUserByEmail] User detail has found")
@@ -120,7 +122,19 @@ func (ur *UserRepository) UpdateUserById(id string, user *requests.Update) (mode
 
 	fmt.Println("[UpdateUserById] Updating user successful")
 
-	response.Where("email = ?", id).Find(&userResponse)
+	response.Where("id = ?", id).Find(&userResponse)
 
 	return userResponse, nil
+}
+
+func (ur *UserRepository) UpdateUserResetPassword(email string, password *models.UpdatePassword) error {
+
+	response := ur.db.Where("email = ?", email).Model(&models.User{}).Updates(&password)
+
+	if response.Error != nil {
+		fmt.Println("[UpdateUserResetPassword]", response.Error.Error())
+		return response.Error
+	}
+
+	return nil
 }

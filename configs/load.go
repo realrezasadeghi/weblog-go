@@ -2,14 +2,13 @@ package configs
 
 import (
 	"fmt"
+	"github.com/joho/godotenv"
 	"os"
 	"weblog/models"
-
-	"github.com/joho/godotenv"
 )
 
-func LoadConfigs() (models.Database, error) {
-	fmt.Println("[LoadConfig] Loading env variables")
+func LoadDatabaseConfig() (models.Database, error) {
+	fmt.Println("[LoadDatabaseConfig] Loading env database variables")
 
 	err := godotenv.Load()
 
@@ -27,6 +26,27 @@ func LoadConfigs() (models.Database, error) {
 	}
 
 	return config, nil
+}
+
+func LoadSmtpConfigs() (models.Smtp, error) {
+	fmt.Println("[LoadConfig] Loading env smtp variables")
+
+	err := godotenv.Load()
+
+	if err != nil {
+		fmt.Println("[LoadSmtpConfigs]", err.Error())
+		return models.Smtp{}, err
+	}
+
+	smtp := models.Smtp{
+		SMTPHost:     os.Getenv("SMTP_HOST"),
+		SMTPUser:     os.Getenv("SMTP_USER"),
+		SMTPPort:     os.Getenv("SMTP_PORT"),
+		EmailFrom:    os.Getenv("EMAIL_FROM"),
+		SMTPPassword: os.Getenv("SMTP_PASSWORD"),
+	}
+
+	return smtp, nil
 }
 
 func GetDsn(config models.Database) string {
