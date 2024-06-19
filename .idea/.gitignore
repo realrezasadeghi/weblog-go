@@ -8,3 +8,6 @@
 /dataSources.local.xml
 /sonarlint
 *.sum
+/.idea
+
+*.xml
